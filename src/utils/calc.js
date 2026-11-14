@@ -2,7 +2,7 @@
 import { NATURES } from '../data/natures.js'
 // Multiplicadores [aumenta, reduz]. sp multiplica o INTERVALO de ajuda (menor = mais rápido).
 const M = { sp: [0.9, 1.075], in: [1.2, 0.8], sk: [1.2, 0.8] }
-export const SUB_LEVELS = [10, 25, 50, 75, 100] // níveis em que cada sub-habilidade é liberada
+export const SUB_LEVELS = [10, 25, 50, 70, 80] // níveis de liberação das sub-habilidades (conferido em prints do jogo)
 export const nm = (nat, k) => { const x = NATURES[nat]; return !x ? 1 : x.up === k ? M[k][0] : x.down === k ? M[k][1] : 1 }
 const fr = a => (a > 1 ? a / 100 : a) // a API pode guardar % como 18 ou 0.18
 export const opts = (sp, k) => (sp['ingredient' + k] || []).filter(i => i.amount > 0)
@@ -28,7 +28,9 @@ export function estimate(mon, sp, subs) {
   const amts = sp.skill?.strengthAmounts
   const skillAmt = amts ? amts[Math.min(mon.skillLevel, amts.length) - 1] : null
   const berries = helps * (1 - ingP) * (1 + fx.berry)
-  return { helps, berries, berryStrength: berries * sp.berry.value, ingCount: helps * ingP * avgAmt, ingStrength: helps * ingP * avgVal, skillTriggers: triggers, skillStrength: skillAmt ? triggers * skillAmt : null }
+  const by = {}
+  slots.forEach(x => { by[x.ingredient.name] = (by[x.ingredient.name] || 0) + (helps * ingP * x.amount) / n })
+  return { by, helps, berries, berryStrength: berries * sp.berry.value, ingCount: helps * ingP * avgAmt, ingStrength: helps * ingP * avgVal, skillTriggers: triggers, skillStrength: skillAmt ? triggers * skillAmt : null }
 }
 
 const W = { berry: [1, .25, .25], ing: [.25, 1, .25], skill: [.25, .25, 1], bal: [1, 1, 1] }
@@ -44,11 +46,15 @@ export function rank(items, focus = 'bal', berry = '') {
 }
 export const sameBerry = ch => { const n = {}; ch.forEach(x => (n[x.sp.berry.name] = (n[x.sp.berry.name] || 0) + 1)); return Math.max(...Object.values(n)) }
 const teamScore = ch => ch.reduce((t, x) => t + x.score, 0) / ch.length + (0.1 * (sameBerry(ch) - 1)) / 4 // bônus de sinergia de berry
-export function bestTeam(ranked) {
-  const pool = [...ranked].sort((a, b) => b.score - a.score).slice(0, 15), n = Math.min(5, pool.length)
+export const coverage = (ms, target) => Object.entries(target).filter(([, q]) => q > 0).map(([k, q]) => { const got = ms.reduce((t, m) => t + (m.est.by[k] || 0), 0); return { k, need: q, got, pct: Math.min(1, got / q) } })
+const covScore = (ch, t) => { const c = coverage(ch, t); return c.length ? c.reduce((a, x) => a + x.pct, 0) / c.length : 0 }
+export function bestTeam(ranked, target = {}) {
+  const has = Object.values(target).some(q => q > 0)
+  const val = x => x.score + (has ? covScore([x], target) : 0)
+  const pool = [...ranked].sort((a, b) => val(b) - val(a)).slice(0, 15), n = Math.min(5, pool.length)
   let best = null
   const go = (s, ch) => {
-    if (ch.length === n) { const t = teamScore(ch); if (!best || t > best.t) best = { t, team: [...ch] }; return }
+    if (ch.length === n) { const t = teamScore(ch) + (has ? 0.6 * covScore(ch, target) : 0); if (!best || t > best.t) best = { t, team: [...ch] }; return }
     for (let i = s; i <= pool.length - (n - ch.length); i++) { ch.push(pool[i]); go(i + 1, ch); ch.pop() }
   }
   if (n) go(0, [])

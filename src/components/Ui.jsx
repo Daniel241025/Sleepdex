@@ -1,23 +1,24 @@
+import { useState } from 'react'
 import { sprite } from '../services/sleepApi.js'
-import { fmt, sameBerry } from '../utils/calc.js'
+import { ingChoice } from '../utils/calc.js'
 export const SPEC = { berry: 'Berries', ingredient: 'Ingredientes', skill: 'Habilidades', all: 'Todas' }
+const BASE = import.meta.env.BASE_URL
+const EMO = { apple: '🍎', milk: '🥛', honey: '🍯', ginger: '🫚', egg: '🥚', leek: '🧅', mushroom: '🍄', oil: '🫒', potato: '🥔', tomato: '🍅', sausage: '🌭', soybean: '🫘', corn: '🌽', coffee: '☕', herb: '🌿', tail: '🦎', cacao: '🍫', pumpkin: '🎃', avocado: '🥑' }
+// Ícone em public/img/{ing|berry|island}/{nome}.png; se o arquivo não existir, mostra um emoji.
+export function Img({ kind, name, size = 28 }) {
+  const [bad, setBad] = useState(false), k = String(name || '').toLowerCase()
+  if (bad || !k) return <span className="fb" style={{ width: size, height: size, fontSize: size * 0.62 }}>{kind === 'ing' ? EMO[k] || '🥣' : kind === 'berry' ? '🫐' : '🏝️'}</span>
+  return <img className="ico" src={`${BASE}img/${kind}/${k}.png`} width={size} height={size} alt={name} title={name} onError={() => setBad(true)} />
+}
 export const Sprite = ({ sp }) => sp ? <img className="sprite" src={sprite(sp.pokedexNumber)} alt="" onError={e => (e.target.style.visibility = 'hidden')} /> : <div className="sprite" />
 export function MonLine({ mon, sp, children }) {
   return <div className="monline"><Sprite sp={sp} /><div><b>{mon.name}</b><div className="muted">{sp?.displayName ?? mon.species} · Nv {mon.level} · {mon.nature}{sp ? ` · ${SPEC[sp.specialty] || sp.specialty}` : ''}</div></div><div className="grow" />{children}</div>
 }
-export function TeamView({ members }) {
-  if (!members.length) return <p className="muted">Nenhum integrante selecionado.</p>
-  const tot = k => members.reduce((t, m) => t + m.est[k], 0)
-  const spec = {}, berry = {}
-  members.forEach(m => { spec[SPEC[m.sp.specialty] || m.sp.specialty] = (spec[SPEC[m.sp.specialty] || m.sp.specialty] || 0) + 1; berry[m.sp.berry.name] = (berry[m.sp.berry.name] || 0) + 1 })
-  const list = o => Object.entries(o).map(([k, v]) => `${k} ×${v}`).join(', ')
-  return <>
-    <div className="scroll"><table><thead><tr><th>Pokémon</th><th>Berries/dia</th><th>Ingred./dia</th><th>Habilidade</th><th>Ativações/dia</th></tr></thead><tbody>
-      {members.map(m => <tr key={m.mon.id}><td><MonLine mon={m.mon} sp={m.sp} /></td><td>{fmt(m.est.berries)} <small className="muted">{m.sp.berry.name}</small></td><td>{fmt(m.est.ingCount)}</td>
-        <td><small>{m.sp.skill?.modifierName || m.sp.skill?.name || m.sp.skill?.baseSkill?.name || '—'}</small></td><td>{fmt(m.est.skillTriggers)}</td></tr>)}
-      <tr className="tot"><td>Total estimado</td><td>{fmt(tot('berries'))}</td><td>{fmt(tot('ingCount'))}</td><td /><td>{fmt(tot('skillTriggers'))}</td></tr></tbody></table></div>
-    <p><b>Especialidades:</b> {list(spec)}</p>
-    <p><b>Berries:</b> {list(berry)} — <b>sinergia:</b> {sameBerry(members) >= 3 ? 'boa (3+ iguais)' : sameBerry(members) === 2 ? 'média (2 iguais)' : 'baixa (todas diferentes)'}</p>
-    <p className="muted">Valores diários são estimativas simplificadas (24h de ajuda, sem energia/inventário), a partir dos dados da SleepAPI.</p>
-  </>
+export function MonCard({ m, on, disabled, onClick }) {
+  const { mon, sp } = m
+  const slots = [0, 30, 60].filter(k => k === 0 || mon.level >= k).map(k => ingChoice(sp, mon, k)).filter(Boolean)
+  return <button type="button" className={'mcard' + (on ? ' on' : '')} disabled={disabled} onClick={onClick}>
+    <Sprite sp={sp} /><b>{mon.name}</b><span className="muted">Nv {mon.level} · {SPEC[sp.specialty] || sp.specialty}</span>
+    <span className="icons"><Img kind="berry" name={sp.berry.name} size={22} />{slots.map((s, i) => <Img key={i} kind="ing" name={s.ingredient.name} size={22} />)}</span>
+  </button>
 }
