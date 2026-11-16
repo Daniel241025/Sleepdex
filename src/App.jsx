@@ -7,12 +7,14 @@ import Team from "./pages/Team.jsx";
 import Compare from "./pages/Compare.jsx";
 import Explore from "./pages/Explore.jsx";
 import Tiers from "./pages/Tiers.jsx";
+import Natures from "./pages/Natures.jsx";
 
 const PAGES = [
   ["time", "Montar Time"],
   ["pokemon", "Meus Pokémon"],
   ["explorar", "Explorar"],
   ["tiers", "Tiers por ilha"],
+  ["natureza", "Natureza ideal"],
   ["comparar", "Comparar"],
 ];
 const useRoute = () => {
@@ -72,6 +74,7 @@ export default function App() {
       pokemon: MyPokemon,
       explorar: Explore,
       tiers: Tiers,
+      natureza: Natures,
       comparar: Compare,
     }[route] || Team;
   return (
