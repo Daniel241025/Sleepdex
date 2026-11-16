@@ -533,3 +533,76 @@ details {
   font-size: 0.7rem;
   color: var(--mut);
 }
+/* tiers */
+.tier {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.tlabel {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  font-weight: 800;
+  flex: none;
+  color: #10162e;
+}
+.t-S {
+  background: linear-gradient(135deg, #ffd76a, #ff8f6b);
+}
+.t-A {
+  background: linear-gradient(135deg, #ffb36a, #f7d56a);
+}
+.t-B {
+  background: linear-gradient(135deg, #8be3a8, #6fd0d8);
+}
+.t-C {
+  background: linear-gradient(135deg, #8fb8ff, #a99cff);
+}
+.tgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.tcard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #ffffff08;
+  text-align: center;
+  font-size: 0.8rem;
+}
+.tcard.have {
+  border-color: var(--ok);
+  background: #6ee7a81a;
+}
+.tcard .icons {
+  margin: 0;
+  align-items: center;
+}
+.tcard .ok {
+  color: var(--ok);
+}
+.tcard .miss {
+  color: var(--mut);
+}
+label.chk {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: var(--txt);
+}
+@media (max-width: 700px) {
+  .tier {
+    flex-direction: column;
+  }
+}

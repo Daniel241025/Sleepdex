@@ -6,11 +6,13 @@ import MyPokemon from "./pages/MyPokemon.jsx";
 import Team from "./pages/Team.jsx";
 import Compare from "./pages/Compare.jsx";
 import Explore from "./pages/Explore.jsx";
+import Tiers from "./pages/Tiers.jsx";
 
 const PAGES = [
   ["time", "Montar Time"],
   ["pokemon", "Meus Pokémon"],
   ["explorar", "Explorar"],
+  ["tiers", "Tiers por ilha"],
   ["comparar", "Comparar"],
 ];
 const useRoute = () => {
@@ -65,9 +67,13 @@ export default function App() {
   );
   const props = { mons, setMons, teams, setTeams, meta, species, items };
   const Page =
-    { time: Team, pokemon: MyPokemon, explorar: Explore, comparar: Compare }[
-      route
-    ] || Team;
+    {
+      time: Team,
+      pokemon: MyPokemon,
+      explorar: Explore,
+      tiers: Tiers,
+      comparar: Compare,
+    }[route] || Team;
   return (
     <div className="app">
       <header>

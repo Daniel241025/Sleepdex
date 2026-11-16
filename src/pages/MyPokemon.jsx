@@ -11,7 +11,14 @@ const empty = {
   ing: {},
   skillLevel: 1,
 };
-export default function MyPokemon({ mons, setMons, meta, species }) {
+export default function MyPokemon({
+  mons,
+  setMons,
+  teams,
+  setTeams,
+  meta,
+  species,
+}) {
   const [f, setF] = useState(empty),
     [editId, setEditId] = useState(null),
     [sp, setSp] = useState(null);
@@ -179,6 +186,44 @@ export default function MyPokemon({ mons, setMons, meta, species }) {
     ]);
     setImp(null);
     setTxt("");
+  };
+  const exportAll = () => {
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          { sleepdex: 1, date: new Date().toISOString(), mons, teams },
+          null,
+          1,
+        ),
+      ],
+      { type: "application/json" },
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `sleepdex-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const restore = (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    f.text().then((t) => {
+      try {
+        const d = JSON.parse(t);
+        if (!d.sleepdex || !Array.isArray(d.mons)) throw new Error();
+        if (
+          !confirm(
+            `Restaurar backup com ${d.mons.length} Pokémon e ${(d.teams || []).length} equipes? Isso SUBSTITUI o que está salvo agora.`,
+          )
+        )
+          return;
+        setMons(d.mons);
+        setTeams(Array.isArray(d.teams) ? d.teams : []);
+      } catch {
+        alert("Este arquivo não é um backup do SleepDex.");
+      }
+    });
   };
   const maxSk = sp?.skill?.RP?.length || 7;
   return (
@@ -394,6 +439,32 @@ export default function MyPokemon({ mons, setMons, meta, species }) {
   }
 ]`}</pre>
         </details>
+      </div>
+      <div className="card">
+        <h2>Backup</h2>
+        <p className="muted">
+          Seus dados ficam só neste navegador. Exporte um backup de vez em
+          quando, e use-o para levar tudo a outro aparelho.
+        </p>
+        <button
+          className="btn"
+          onClick={exportAll}
+          disabled={!mons.length && !teams.length}
+        >
+          Exportar backup
+        </button>
+        <label
+          className="btn ghost"
+          style={{ cursor: "pointer", flexDirection: "row" }}
+        >
+          Restaurar backup
+          <input
+            type="file"
+            accept=".json,application/json"
+            onChange={restore}
+            hidden
+          />
+        </label>
       </div>
     </>
   );
