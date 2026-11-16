@@ -8,6 +8,7 @@ import Compare from "./pages/Compare.jsx";
 import Explore from "./pages/Explore.jsx";
 import Tiers from "./pages/Tiers.jsx";
 import Natures from "./pages/Natures.jsx";
+import Potential from "./pages/Potential.jsx";
 
 const PAGES = [
   ["time", "Montar Time"],
@@ -15,6 +16,7 @@ const PAGES = [
   ["explorar", "Explorar"],
   ["tiers", "Tiers por ilha"],
   ["natureza", "Natureza ideal"],
+  ["potencial", "Onde gastar doces"],
   ["comparar", "Comparar"],
 ];
 const useRoute = () => {
@@ -37,22 +39,30 @@ export default function App() {
   const [teams, setTeams] = useLocal("sleepdex:teams", []);
   const [meta, setMeta] = useState(null),
     [err, setErr] = useState("");
-  const [species, setSpecies] = useState({});
+  const [species, setSpecies] = useState({}),
+    [failed, setFailed] = useState({});
   useEffect(() => {
     loadMeta()
       .then(setMeta)
       .catch((e) => setErr(e.message));
   }, []);
   const speciesKey = [...new Set(mons.map((m) => m.species))].join();
+  const load = (n) =>
+    getPokemon(n)
+      .then((d) => {
+        setSpecies((x) => ({ ...x, [n]: d }));
+        setFailed((f) => {
+          const y = { ...f };
+          delete y[n];
+          return y;
+        });
+      })
+      .catch((e) => setFailed((f) => ({ ...f, [n]: e.message })));
   useEffect(() => {
     speciesKey
       .split(",")
-      .filter((n) => n && !species[n])
-      .forEach((n) =>
-        getPokemon(n)
-          .then((d) => setSpecies((s) => ({ ...s, [n]: d })))
-          .catch((e) => setErr(e.message)),
-      );
+      .filter((n) => n && !species[n] && !failed[n])
+      .forEach(load);
   }, [speciesKey]);
   const items = useMemo(
     () =>
@@ -75,6 +85,7 @@ export default function App() {
       explorar: Explore,
       tiers: Tiers,
       natureza: Natures,
+      potencial: Potential,
       comparar: Compare,
     }[route] || Team;
   return (
@@ -92,10 +103,24 @@ export default function App() {
         </nav>
       </header>
       <main>
+        {Object.keys(failed).length > 0 && (
+          <div className="notice">
+            Não consegui carregar dados de{" "}
+            <b>{Object.keys(failed).join(", ")}</b> (a SleepAPI respondeu com
+            erro). Esses Pokémon ficam fora dos cálculos por enquanto; o resto
+            funciona normalmente.{" "}
+            <button
+              className="btn ghost"
+              onClick={() => Object.keys(failed).forEach(load)}
+            >
+              Tentar de novo
+            </button>
+          </div>
+        )}
         {err && (
           <div className="error">
-            ⚠️ SleepAPI indisponível ou bloqueada: {err}. Seus dados salvos
-            continuam no navegador; tente recarregar a página.
+            ⚠️ Não consegui carregar a lista de dados da SleepAPI: {err}. Seus
+            dados salvos continuam no navegador; tente recarregar a página.
           </div>
         )}
         {!meta && !err ? (

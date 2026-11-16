@@ -606,3 +606,14 @@ label.chk {
     flex-direction: column;
   }
 }
+.notice {
+  background: #ffb84d1f;
+  border: 1px solid #ffb84d66;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  font-size: 0.92rem;
+}
+.notice .btn {
+  margin: 6px 0 0;
+}
